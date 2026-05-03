@@ -1,26 +1,175 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* ── Brand color palette ──────────────────────────────── */
+  --color-bg: #f0efec; /* warm paper-feeling background */
+  --color-surface: #ffffff; /* cards, nav pill */
+  --color-ink: #111111; /* primary text, buttons */
+  --color-ink-body: #3a3a3a; /* body copy — passes AA on bg with room to spare */
+  --color-ink-2: #5c5c5c; /* secondary text, labels */
+  --color-ink-3: #9a9a9a; /* tertiary / decorative only — fails AA as text on white */
+  --color-border: #e8e7e3; /* dividers, subtle outlines */
+
+  /* ── Typography ───────────────────────────────────────── */
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+
+  /* ── Container ────────────────────────────────────────── */
+  --breakpoint-2xl: 1400px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Custom utility shorthand for the headline tracking we use across the site */
+@layer utilities {
+  .tracking-display {
+    letter-spacing: -0.035em;
+  }
+  .tracking-tighter-display {
+    letter-spacing: -0.045em;
+  }
+  .animate-float-slow {
+    animation: floatY 6s ease-in-out infinite;
+  }
+  .animate-float-slower {
+    animation: floatY 8s ease-in-out infinite 0.6s;
+  }
+  /* Coupled-pendulum lanyard motion. The strap and the badge are wrapped in
+     two separate sway elements so they animate independently, modeling a
+     real lanyard where the badge (further from the pivot) swings with
+     greater amplitude and a small phase lag behind the strap. Both use a
+     sine easing curve (closer to simple harmonic motion than ease-in-out)
+     and a 5.6s period detuned from the scatter cards' 6s floatY so the
+     page motion reads asymmetric rather than metronomic. */
+  .animate-lanyard-strap {
+    animation: lanyardStrapSway 5.6s cubic-bezier(0.445, 0.05, 0.55, 0.95)
+      infinite;
+    transform-origin: 50% 4px;
+    will-change: transform;
+  }
+  .animate-lanyard-badge {
+    /* Negative animation-delay starts the badge ~180ms behind the strap —
+       the inertial lag a heavier object on a swivel hook actually has.
+       Origin is top-center (140, 0) where the pill clip connects — a real
+       badge pivots around its clip, not its top edge. */
+    animation: lanyardBadgeSway 5.6s cubic-bezier(0.445, 0.05, 0.55, 0.95)
+      -0.18s infinite;
+    transform-origin: 140px 0;
+    will-change: transform;
+  }
+  .animate-lanyard-back {
+    /* Back card pivots from the same conceptual point as the front (the
+       pill clip at top-center). Positive rotation = visual CW around
+       top-center, which fans the LEFT side out from behind the front
+       card, exposing the MOBOL wordmark strip. */
+    animation: lanyardBackCardSway 5.6s cubic-bezier(0.445, 0.05, 0.55, 0.95)
+      -0.36s infinite;
+    transform-origin: 140px 0;
+    will-change: transform;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
+
+@keyframes lanyardStrapSway {
+  /* Positive (CW) rotation around the slot pivot — the strap bottom
+     swings LEFT, pulling the badge toward the page center. */
+  0%,
+  100% {
+    transform: rotate(7deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes lanyardBadgeSway {
+  /* Positive (CW) rotation around the pill clip at top-center (140, 0).
+     The badge's bottom-RIGHT corner swings LEFT toward the page center
+     while top-LEFT remains highest — the visual reads as the card
+     "leaning into" the layout (top-left up, bottom-right pulled toward
+     the text column). */
+  0%,
+  100% {
+    transform: rotate(12deg);
+  }
+  25% {
+    transform: rotate(13deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+  75% {
+    transform: rotate(13deg);
+  }
+}
+
+@keyframes lanyardBackCardSway {
+  /* Positive rotation = visual CW around top-center pivot (140, 0).
+     Fans the back card's LEFT side out from behind the front card. */
+  0%,
+  100% {
+    transform: rotate(7deg);
+  }
+  50% {
+    transform: rotate(8.4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-slower {
+    animation: none;
+  }
+  .animate-lanyard-strap,
+  .animate-lanyard-badge,
+  .animate-lanyard-back {
+    animation: none;
+  }
+  /* Keep a static tilt — a hanging lanyard at perfect vertical reads as
+     broken upright; the gentle lean is a design choice, not motion. */
+  .animate-lanyard-strap {
+    transform: rotate(8deg);
+    transform-origin: 50% 4px;
+  }
+  .animate-lanyard-badge {
+    transform: rotate(13deg);
+    transform-origin: 140px 0;
+  }
+  .animate-lanyard-back {
+    transform: rotate(7deg);
+    transform-origin: 140px 0;
+  }
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle shadow tokens reused by nav and cards */
+:root {
+  --shadow-pill:
+    0 1px 2px rgba(17, 17, 17, 0.04),
+    0 8px 24px rgba(17, 17, 17, 0.06);
+  --shadow-card:
+    0 1px 1px rgba(17, 17, 17, 0.03),
+    0 12px 32px rgba(17, 17, 17, 0.06),
+    0 32px 64px rgba(17, 17, 17, 0.05);
+}
+
+/* Avatar smile transition is now driven by a <video> element in
+   Lanyard.tsx (RAF-scrubbed reverse on mouseleave). The previous
+   image-based crossfade rules and the `@layer authored` machinery they
+   needed are no longer necessary. */
