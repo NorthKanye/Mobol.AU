@@ -120,16 +120,30 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
 
   return (
     <div
-      className="relative flex flex-col items-center"
+      data-lanyard-root=""
+      className="relative flex flex-col items-center animate-lanyard-strap"
+      // The default fluid `--s` (two-piece clamp around the 1024 breakpoint)
+      // lives in globals.css under `[data-lanyard-root]`. We only set it
+      // inline when a caller passes an explicit `scale` override.
       style={
-        {
-          // Fluid scale tuned so the badge supports the headline rather than dominating it.
-          // 1024 → 0.85, 1280 → 0.94, 1536 → 1.04, 1920 → 1.08 (capped).
-          "--s":
-            scale ?? "clamp(0.85, calc(0.85 + (100vw - 1024px) / 2700px), 1.08)",
-        } as React.CSSProperties
+        scale ? ({ "--s": scale } as React.CSSProperties) : undefined
       }
     >
+      {/* Strap-exit shadow — the tab edge casting onto the strap as it
+          emerges from the slot. Sits above the strap and travels with the
+          lanyard so the shadow stays anchored to the strap top. */}
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-[1]"
+        style={{
+          top: 0,
+          width: "calc(var(--s, 1) * 28px)",
+          height: "calc(var(--s, 1) * 14px)",
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0))",
+        }}
+      />
+
       {/* Strap. Black ribbon emerging from the nav's threading slot. The
           strap ends in a clean horizontal cut at the bottom of its viewBox.
           The pill clip that connects strap-to-badge is drawn inside the

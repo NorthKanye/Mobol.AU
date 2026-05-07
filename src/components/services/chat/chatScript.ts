@@ -1,0 +1,126 @@
+import type { ChatScript } from "./types";
+
+export const chatScript: ChatScript = [
+  {
+    kind: "user",
+    text: "Show me what you can do.",
+    preDelayMs: 900,
+  },
+  {
+    kind: "assistant",
+    typewriter: true,
+    text: "Happy to. Pick a thread.",
+    thinkingMs: 900,
+    typewriterCharMs: 38,
+  },
+  { kind: "pause", ms: 700 },
+  {
+    kind: "user",
+    text: "Customer support, first.",
+    preDelayMs: 1100,
+  },
+  {
+    kind: "assistant",
+    text: "Live, on-brand, and fluent in your refund policy by Tuesday.",
+    typewriter: true,
+    thinkingMs: 950,
+    typewriterCharMs: 32,
+  },
+  { kind: "pause", ms: 850 },
+  {
+    kind: "user",
+    text: "What about voice?",
+    preDelayMs: 1000,
+  },
+  {
+    kind: "assistant",
+    widget: { type: "phone", durationSec: 47, name: "Inbound · Sasha (new lead)" },
+    thinkingMs: 850,
+  },
+  { kind: "pause", ms: 1800 },
+  {
+    kind: "assistant",
+    typewriter: true,
+    text: "Real numbers, real conversations. It books the call before you finish your coffee.",
+    thinkingMs: 700,
+    typewriterCharMs: 30,
+  },
+  { kind: "pause", ms: 800 },
+  {
+    kind: "assistant",
+    widget: { type: "voice", durationSec: 12, label: "Sample reply" },
+    thinkingMs: 700,
+  },
+  { kind: "pause", ms: 1100 },
+  {
+    kind: "user",
+    text: "Visuals?",
+    preDelayMs: 1100,
+  },
+  {
+    kind: "assistant",
+    text: "Generated. Edited. On-brand by default.",
+    typewriter: true,
+    widget: { type: "images", count: 3 },
+    thinkingMs: 800,
+    typewriterCharMs: 30,
+  },
+  { kind: "pause", ms: 1300 },
+  {
+    kind: "user",
+    text: "Does any of it actually move the numbers?",
+    preDelayMs: 1100,
+  },
+  {
+    kind: "assistant",
+    widget: {
+      type: "chart",
+      chart: "bars",
+      values: [4, 5, 4, 7, 6, 9, 8, 11, 12, 16],
+      label: "Resolved tickets / week",
+    },
+    thinkingMs: 900,
+  },
+  { kind: "pause", ms: 900 },
+  {
+    kind: "assistant",
+    typewriter: true,
+    text: "Receipts beat hand-waving every time.",
+    thinkingMs: 600,
+    typewriterCharMs: 32,
+  },
+  { kind: "pause", ms: 1300 },
+  {
+    kind: "user",
+    text: "And when nobody's watching?",
+    preDelayMs: 1100,
+  },
+  {
+    kind: "assistant",
+    text: "Background agents handle the boring half.",
+    typewriter: true,
+    widget: {
+      type: "agentTasks",
+      items: [
+        "Reconcile yesterday's orders",
+        "Flag late shipments",
+        "Draft customer updates",
+        "Schedule Monday follow-ups",
+      ],
+      perItemMs: 620,
+    },
+    thinkingMs: 750,
+    typewriterCharMs: 28,
+  },
+  { kind: "pause", ms: 2200 },
+  {
+    kind: "assistant",
+    widget: {
+      type: "cta",
+      href: "#contact",
+      label: "Build this for your studio.",
+      eyebrow: "ready when you are",
+    },
+    thinkingMs: 800,
+  },
+];

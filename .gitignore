@@ -42,3 +42,4 @@ next-env.d.ts
 
 # MCP / dev tooling caches
 .playwright-mcp/
+.tmp-screenshots/
