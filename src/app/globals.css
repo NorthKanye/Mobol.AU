@@ -223,12 +223,59 @@
   .animate-chat-cta-in {
     animation: chatCtaIn 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+  /* Thinking-steps shimmer — gradient sweep across active step text.
+     The text uses background-clip: text so the gradient renders as the
+     fill color of the glyphs. background-position animates 0→200% which,
+     paired with a 200% wide gradient, slides the bright band L→R across. */
+  .animate-chat-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-ink-3) 0%,
+      var(--color-ink) 50%,
+      var(--color-ink-3) 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: chatShimmer 1.6s linear infinite;
+  }
+  /* Thinking-steps connector line draw-on — scaleY from 0 to 1 anchored at
+     the top, so the line "extends downward" rather than scaling from center. */
+  .animate-chat-thinking-line {
+    transform-origin: top;
+    animation: chatThinkingLine 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* Single thinking-step entrance — opacity + slight upward translate so
+     each step "drops into place" beneath the previous one. */
+  .animate-chat-thinking-step-in {
+    animation: chatThinkingStepIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  /* The reveal-to-collapsed transition — height + opacity contract. Used
+     when the reveal sequence finishes and we fold to the toggle bar. */
+  .animate-chat-thinking-collapse {
+    animation: chatThinkingCollapse 380ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  }
+  /* Ready-to-type signal — input border briefly flashes ink/30 once, then
+     returns to border. data-ready="true" attribute on the form drives this
+     and is removed by ChatInput after 1.5s. */
+  .chat-input-ready {
+    animation: chatReadyPulse 1500ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  /* Quick-reply chip entrance — staggered fade+slide-up via animation-delay
+     applied per chip. The chips also exit (fade out) when first user submit
+     fires; the parent toggles their visibility. */
+  .animate-chat-chip-in {
+    animation: chatChipIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
   .chat-paused .animate-chat-typing-dot,
   .chat-paused .animate-chat-waveform-bar,
   .chat-paused .animate-chat-voice-progress,
   .chat-paused .animate-chat-phone-pulse,
   .chat-paused .animate-chat-phone-meter,
-  .chat-paused .animate-chat-agent-spin {
+  .chat-paused .animate-chat-agent-spin,
+  .chat-paused .animate-chat-shimmer {
     animation-play-state: paused;
   }
 
@@ -941,6 +988,69 @@
   }
 }
 
+@keyframes chatShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes chatThinkingLine {
+  0% {
+    transform: scaleY(0);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes chatThinkingStepIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chatThinkingCollapse {
+  0% {
+    opacity: 1;
+    max-height: 240px;
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+@keyframes chatReadyPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(17, 17, 17, 0);
+  }
+  35% {
+    box-shadow: 0 0 0 4px rgba(17, 17, 17, 0.07);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(17, 17, 17, 0);
+  }
+}
+
+@keyframes chatChipIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 
 @media (prefers-reduced-motion: reduce) {
@@ -1009,12 +1119,23 @@
   .animate-chat-phone-pulse,
   .animate-chat-phone-meter,
   .animate-chat-agent-spin,
-  .animate-chat-cta-in {
+  .animate-chat-cta-in,
+  .animate-chat-shimmer,
+  .animate-chat-thinking-line,
+  .animate-chat-thinking-step-in,
+  .animate-chat-thinking-collapse,
+  .animate-chat-chip-in,
+  .chat-input-ready {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
     clip-path: none !important;
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
   }
   /* Branding mockup — JS-side reduced-motion check skips the loop and
      materializes the final state (all cells filled, system complete);

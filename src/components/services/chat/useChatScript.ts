@@ -70,7 +70,8 @@ type Action =
       text: string;
       widget: ChatWidget;
     }
-  | { type: "FinishResponding" };
+  | { type: "FinishResponding" }
+  | { type: "ToggleThinking"; id: string };
 
 function prune(messages: RenderedMessage[]): RenderedMessage[] {
   if (messages.length <= MAX_MESSAGES) return messages;
@@ -161,6 +162,15 @@ function reducer(state: State, action: Action): State {
       };
     case "FinishResponding":
       return { ...state, phase: "done", showTypingDots: false };
+    case "ToggleThinking":
+      return {
+        ...state,
+        messages: state.messages.map((m) =>
+          m.id === action.id && m.thinking
+            ? { ...m, thinking: { ...m.thinking, expanded: !m.thinking.expanded } }
+            : m,
+        ),
+      };
     default:
       return state;
   }
@@ -194,6 +204,14 @@ function buildAllScriptMessages(script: ChatScript): RenderedMessage[] {
         source: "script",
         status: "complete",
         stepIndex: i,
+        thinking: step.thinkingSteps
+          ? {
+              steps: step.thinkingSteps,
+              activeIndex: step.thinkingSteps.length,
+              expanded: false,
+              revealComplete: true,
+            }
+          : undefined,
       });
     }
   });
@@ -213,7 +231,8 @@ export function useChatScript(script: ChatScript) {
   const userMsgCounter = useRef(0);
 
   // Detect reduced motion once on mount; if active, materialize all script
-  // messages and set phase to 'done' so the input is immediately usable.
+  // messages (including thinking-steps in collapsed-complete state) and set
+  // phase to 'done' so the input is immediately usable.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mq.matches) {
@@ -268,17 +287,19 @@ export function useChatScript(script: ChatScript) {
       }, step.preDelayMs ?? 200);
     } else if (step.kind === "assistant") {
       const preDelay = step.preDelayMs ?? 0;
-      const thinkingMs = step.thinkingMs ?? 600;
       const fullText = step.text ?? "";
       const useTypewriter = !!step.typewriter && fullText.length > 0;
       const charMs = step.typewriterCharMs ?? 22;
 
-      schedule(() => {
-        if (thinkingMs > 0 && !alreadyAdded) {
-          dispatch({ type: "SetTyping", show: true });
-        }
+      // Branch: thinking-steps reveal replaces the dot-pulse phase entirely.
+      if (step.thinkingSteps && step.thinkingSteps.length > 0) {
+        const stepMs = step.thinkingStepMs ?? 600;
+        const stepsCount = step.thinkingSteps.length;
+        const stepsTotal = stepsCount * stepMs;
+        const collapseMs = 380; // matches chatThinkingCollapse keyframe
+        const widgetEnterMs = 200; // beat between collapse and widget reveal
+
         schedule(() => {
-          dispatch({ type: "SetTyping", show: false });
           if (!alreadyAdded) {
             dispatch({
               type: "AddScriptMessage",
@@ -289,39 +310,116 @@ export function useChatScript(script: ChatScript) {
                 fullText,
                 widget: step.widget,
                 source: "script",
-                status: useTypewriter ? "revealing" : "complete",
+                status: "revealing",
                 stepIndex,
+                thinking: {
+                  steps: step.thinkingSteps!,
+                  activeIndex: 0,
+                  expanded: false,
+                  revealComplete: false,
+                },
               },
             });
-            if (useTypewriter) {
-              for (let i = 1; i <= fullText.length; i++) {
-                schedule(
-                  () => {
-                    dispatch({
-                      type: "PatchMessage",
-                      id: stepMsgId,
-                      patch: { text: fullText.slice(0, i) },
-                    });
-                    if (i === fullText.length) {
-                      dispatch({ type: "CompleteMessage", id: stepMsgId });
-                      schedule(
-                        () => dispatch({ type: "AdvanceStep" }),
-                        350,
-                      );
-                    }
+            // Advance activeIndex once per stepMs. The reveal renders
+            // step `i` as active while activeIndex === i; once activeIndex
+            // moves past, that step is "complete." When activeIndex
+            // reaches stepsCount, all are complete.
+            for (let i = 1; i <= stepsCount; i++) {
+              schedule(() => {
+                dispatch({
+                  type: "PatchMessage",
+                  id: stepMsgId,
+                  patch: {
+                    thinking: {
+                      steps: step.thinkingSteps!,
+                      activeIndex: i,
+                      expanded: false,
+                      revealComplete: false,
+                    },
                   },
-                  i * charMs,
-                );
-              }
-            } else {
-              schedule(() => dispatch({ type: "AdvanceStep" }), 450);
+                });
+              }, i * stepMs);
             }
+            // After all steps complete: brief beat, then trigger collapse.
+            schedule(() => {
+              dispatch({
+                type: "PatchMessage",
+                id: stepMsgId,
+                patch: {
+                  thinking: {
+                    steps: step.thinkingSteps!,
+                    activeIndex: stepsCount,
+                    expanded: false,
+                    revealComplete: true,
+                  },
+                },
+              });
+            }, stepsTotal + 250);
+            // After collapse + widget enter: complete the message and advance.
+            schedule(
+              () => {
+                dispatch({ type: "CompleteMessage", id: stepMsgId });
+                schedule(() => dispatch({ type: "AdvanceStep" }), 300);
+              },
+              stepsTotal + 250 + collapseMs + widgetEnterMs,
+            );
           } else {
-            // Resuming after pause: skip ahead.
+            // Resuming after pause: just skip ahead. The thinking slice in
+            // state is whatever it was when paused; we move on rather than
+            // replay.
             schedule(() => dispatch({ type: "AdvanceStep" }), 100);
           }
-        }, alreadyAdded ? 0 : thinkingMs);
-      }, preDelay);
+        }, preDelay);
+      } else {
+        // Existing dot-pulse / typewriter flow (unchanged).
+        const thinkingMs = step.thinkingMs ?? 600;
+        schedule(() => {
+          if (thinkingMs > 0 && !alreadyAdded) {
+            dispatch({ type: "SetTyping", show: true });
+          }
+          schedule(
+            () => {
+              dispatch({ type: "SetTyping", show: false });
+              if (!alreadyAdded) {
+                dispatch({
+                  type: "AddScriptMessage",
+                  message: {
+                    id: stepMsgId,
+                    role: "assistant",
+                    text: useTypewriter ? "" : fullText,
+                    fullText,
+                    widget: step.widget,
+                    source: "script",
+                    status: useTypewriter ? "revealing" : "complete",
+                    stepIndex,
+                  },
+                });
+                if (useTypewriter) {
+                  for (let i = 1; i <= fullText.length; i++) {
+                    schedule(() => {
+                      dispatch({
+                        type: "PatchMessage",
+                        id: stepMsgId,
+                        patch: { text: fullText.slice(0, i) },
+                      });
+                      if (i === fullText.length) {
+                        dispatch({ type: "CompleteMessage", id: stepMsgId });
+                        schedule(() => dispatch({ type: "AdvanceStep" }), 350);
+                      }
+                    }, i * charMs);
+                  }
+                } else {
+                  schedule(() => dispatch({ type: "AdvanceStep" }), 450);
+                }
+              } else {
+                // Resuming after pause: skip ahead.
+                schedule(() => dispatch({ type: "AdvanceStep" }), 100);
+              }
+            },
+            alreadyAdded ? 0 : thinkingMs,
+          );
+        }, preDelay);
+      }
     }
 
     return () => {
@@ -349,8 +447,7 @@ export function useChatScript(script: ChatScript) {
     window.setTimeout(() => {
       dispatch({ type: "SetTyping", show: true });
       window.setTimeout(() => {
-        const variant =
-          CTA_RESPONSES[(submitId - 1) % CTA_RESPONSES.length];
+        const variant = CTA_RESPONSES[(submitId - 1) % CTA_RESPONSES.length];
         dispatch({
           type: "AppendCtaResponse",
           id: ctaId,
@@ -362,24 +459,32 @@ export function useChatScript(script: ChatScript) {
     }, 200);
   }, []);
 
+  const toggleThinking = useCallback((id: string) => {
+    dispatch({ type: "ToggleThinking", id });
+  }, []);
+
   return useMemo(
     () => ({
       phase: state.phase,
       messages: state.messages,
       showTypingDots: state.showTypingDots,
       reducedMotion: state.reducedMotion,
+      userSubmitCount: state.userSubmitCount,
       enterViewport,
       exitViewport,
       submitUserMessage,
+      toggleThinking,
     }),
     [
       state.phase,
       state.messages,
       state.showTypingDots,
       state.reducedMotion,
+      state.userSubmitCount,
       enterViewport,
       exitViewport,
       submitUserMessage,
+      toggleThinking,
     ],
   );
 }

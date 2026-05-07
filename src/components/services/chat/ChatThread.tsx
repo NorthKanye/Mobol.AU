@@ -9,9 +9,15 @@ type Props = {
   messages: RenderedMessage[];
   showTypingDots: boolean;
   reducedMotion: boolean;
+  onToggleThinkingAction: (id: string) => void;
 };
 
-export default function ChatThread({ messages, showTypingDots, reducedMotion }: Props) {
+export default function ChatThread({
+  messages,
+  showTypingDots,
+  reducedMotion,
+  onToggleThinkingAction,
+}: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   // Suspends auto-scroll when the user manually scrolls up to read history.
   const [stickToBottom, setStickToBottom] = useState(true);
@@ -56,6 +62,7 @@ export default function ChatThread({ messages, showTypingDots, reducedMotion }: 
             message={m}
             reducedMotion={reducedMotion}
             isLatest={i === messages.length - 1}
+            onToggleThinkingAction={onToggleThinkingAction}
           />
         ))}
         {showTypingDots ? (

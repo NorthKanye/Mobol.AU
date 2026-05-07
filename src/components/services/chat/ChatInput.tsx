@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Phase } from "./types";
 
 type Props = {
@@ -10,7 +10,32 @@ type Props = {
 
 export default function ChatInput({ phase, onSendMessageAction }: Props) {
   const [value, setValue] = useState("");
+  const [readyPulse, setReadyPulse] = useState(false);
+  const [placeholderVisible, setPlaceholderVisible] = useState(false);
+  const prevPhaseRef = useRef<Phase>(phase);
   const disabled = phase !== "done";
+
+  // Detect playing/idle/paused → done transition exactly once and trigger
+  // the one-shot ready signal: 1.5s border pulse + placeholder fade-in.
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    const becameReady =
+      phase === "done" &&
+      (prev === "playing" || prev === "idle" || prev === "paused");
+    prevPhaseRef.current = phase;
+    if (!becameReady) {
+      // First mount under reduced-motion: phase is already "done" — show
+      // placeholder without the pulse.
+      if (phase === "done" && !placeholderVisible) {
+        setPlaceholderVisible(true);
+      }
+      return;
+    }
+    setReadyPulse(true);
+    setPlaceholderVisible(true);
+    const id = window.setTimeout(() => setReadyPulse(false), 1500);
+    return () => window.clearTimeout(id);
+  }, [phase, placeholderVisible]);
 
   const submit = () => {
     const trimmed = value.trim();
@@ -41,22 +66,31 @@ export default function ChatInput({ phase, onSendMessageAction }: Props) {
       }}
       className="border-t border-border bg-surface px-3 py-2.5 flex items-center gap-2"
     >
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            submit();
-          }
-        }}
-        disabled={disabled}
-        rows={1}
-        maxLength={280}
-        placeholder={placeholder}
-        aria-label="Message the AI"
-        className="flex-1 resize-none bg-bg rounded-full px-4 py-2 text-[13px] leading-[1.4] text-ink placeholder:text-ink-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/15 disabled:opacity-60 disabled:cursor-not-allowed max-h-20"
-      />
+      <div
+        className={`flex-1 rounded-full ${readyPulse ? "chat-input-ready" : ""}`}
+      >
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          disabled={disabled}
+          rows={1}
+          maxLength={280}
+          placeholder={placeholder}
+          aria-label="Message the AI"
+          style={{
+            transition: "opacity 350ms ease-out",
+          }}
+          className={`w-full resize-none bg-bg rounded-full px-4 py-2 text-[13px] leading-[1.4] text-ink placeholder:text-ink-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/15 disabled:opacity-60 disabled:cursor-not-allowed max-h-20 ${
+            placeholderVisible ? "placeholder:opacity-100" : "placeholder:opacity-0"
+          }`}
+        />
+      </div>
       <button
         type="submit"
         disabled={disabled || value.trim().length === 0}

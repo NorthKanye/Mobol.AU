@@ -1,13 +1,20 @@
 import type { RenderedMessage } from "./types";
 import { renderWidget } from "./widgets";
+import ThinkingStepsReveal from "./ThinkingStepsReveal";
 
 type Props = {
   message: RenderedMessage;
   reducedMotion: boolean;
   isLatest: boolean;
+  onToggleThinkingAction: (id: string) => void;
 };
 
-export default function ChatMessage({ message, reducedMotion, isLatest }: Props) {
+export default function ChatMessage({
+  message,
+  reducedMotion,
+  isLatest,
+  onToggleThinkingAction,
+}: Props) {
   const isUser = message.role === "user";
   const animateIn = !reducedMotion;
   const showCaret =
@@ -16,11 +23,23 @@ export default function ChatMessage({ message, reducedMotion, isLatest }: Props)
     message.status === "revealing" &&
     message.text.length > 0;
 
+  // Hide widget until thinking-steps reveal completes (so the chart doesn't
+  // flash in alongside the thinking sequence). Other messages without a
+  // thinking slice render the widget immediately.
+  const widgetReady = !message.thinking || message.thinking.revealComplete;
+
   return (
     <div className={`w-full flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`flex flex-col gap-2 ${isUser ? "items-end" : "items-start"} max-w-[88%]`}
       >
+        {message.thinking ? (
+          <ThinkingStepsReveal
+            thinking={message.thinking}
+            reducedMotion={reducedMotion}
+            onToggleAction={() => onToggleThinkingAction(message.id)}
+          />
+        ) : null}
         {message.text || (isUser && message.fullText) ? (
           <div
             className={`${
@@ -38,7 +57,7 @@ export default function ChatMessage({ message, reducedMotion, isLatest }: Props)
             ) : null}
           </div>
         ) : null}
-        {message.widget ? (
+        {message.widget && widgetReady ? (
           <div className={animateIn ? "animate-chat-widget-in" : ""}>
             {renderWidget(message.widget, {
               reducedMotion,

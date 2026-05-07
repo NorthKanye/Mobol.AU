@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import ChatWindow from "./ChatWindow";
 import ChatThread from "./ChatThread";
 import ChatInput from "./ChatInput";
-import { chatScript } from "./chatScript";
+import ChatQuickReplies from "./ChatQuickReplies";
+import { chatScript, quickReplies } from "./chatScript";
 import { useChatScript } from "./useChatScript";
 
 export default function ChatMockup() {
@@ -14,9 +15,11 @@ export default function ChatMockup() {
     messages,
     showTypingDots,
     reducedMotion,
+    userSubmitCount,
     enterViewport,
     exitViewport,
     submitUserMessage,
+    toggleThinking,
   } = useChatScript(chatScript);
 
   useEffect(() => {
@@ -38,6 +41,8 @@ export default function ChatMockup() {
     return () => obs.disconnect();
   }, [enterViewport, exitViewport, reducedMotion]);
 
+  const showQuickReplies = phase === "done" && userSubmitCount === 0;
+
   return (
     <div
       ref={rootRef}
@@ -52,7 +57,15 @@ export default function ChatMockup() {
           messages={messages}
           showTypingDots={showTypingDots}
           reducedMotion={reducedMotion}
+          onToggleThinkingAction={toggleThinking}
         />
+        {showQuickReplies ? (
+          <ChatQuickReplies
+            replies={quickReplies}
+            reducedMotion={reducedMotion}
+            onPickAction={submitUserMessage}
+          />
+        ) : null}
         <ChatInput phase={phase} onSendMessageAction={submitUserMessage} />
       </div>
     </div>
