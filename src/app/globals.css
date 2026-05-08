@@ -173,3 +173,31 @@ body {
    Lanyard.tsx (RAF-scrubbed reverse on mouseleave). The previous
    image-based crossfade rules and the `@layer authored` machinery they
    needed are no longer necessary. */
+
+/* Contact-page expand grid. Mobile (default) is two stacked rows; on the
+   sm breakpoint and up it becomes two columns. The track sizes are driven
+   by inline custom properties set by the React component, so the same
+   transition smoothly handles both axes. */
+.contact-cards {
+  grid-template-columns: 1fr;
+  grid-template-rows: var(--cards-rows, minmax(0, 1fr) minmax(0, 1fr));
+  transition:
+    grid-template-columns 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    grid-template-rows 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 640px) {
+  .contact-cards {
+    grid-template-columns: var(
+      --cards-cols,
+      minmax(0, 1fr) minmax(0, 1fr)
+    );
+    grid-template-rows: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-cards {
+    transition: none !important;
+  }
+}

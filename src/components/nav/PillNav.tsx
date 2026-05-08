@@ -4,7 +4,7 @@ const links = [
   { href: "#who", label: "who we are" },
   { href: "#what", label: "what we do" },
   { href: "#work", label: "work" },
-  { href: "#contact", label: "contact" },
+  { href: "/contact", label: "contact" },
 ];
 
 export default function PillNav() {
@@ -101,7 +101,7 @@ export default function PillNav() {
           </ul>
 
           <Link
-            href="#contact"
+            href="/contact"
             className="
               inline-flex items-center justify-center
               h-[50px] px-7

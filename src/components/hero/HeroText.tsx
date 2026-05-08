@@ -23,7 +23,7 @@ export default function HeroText() {
 
       <div className="mt-10 flex items-center gap-7">
         <Link
-          href="#contact"
+          href="/contact"
           data-smile-trigger
           className="
             inline-flex items-center justify-center
