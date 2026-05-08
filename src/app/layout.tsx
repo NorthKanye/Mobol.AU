@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter_Tight } from "next/font/google";
+import { Inter_Tight, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import PillNav from "@/components/nav/PillNav";
 import "./globals.css";
 
@@ -7,6 +7,21 @@ const interTight = Inter_Tight({
   variable: "--font-inter-tight",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["italic"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -28,7 +43,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={interTight.variable}>
+    <html
+      lang="en"
+      className={`${interTight.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+    >
       <body className="min-h-screen bg-bg text-ink font-sans antialiased selection:bg-ink selection:text-bg">
         <a
           href="#main-content"
