@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const links = [
   { href: "#who", label: "who we are" },
@@ -8,13 +11,32 @@ const links = [
 ];
 
 export default function PillNav() {
+  // The downward TAB (and its threading slot) only makes visual sense on the
+  // home page, where the lanyard ribbon hangs from it. On every other route
+  // (e.g. /contact) there's no lanyard, so the tab would read as an orphan
+  // bump — collapse the nav to a clean rounded pill instead.
+  const pathname = usePathname();
+  const showTab = pathname === "/";
+
+  // Two SVG path variants share the same outer pill geometry. The tab variant
+  // adds the concave "ears" + tab body + tab's rounded bottom corners along
+  // the bottom edge. The no-tab variant runs a straight bottom across instead.
+  const pathWithTab =
+    "M 39 0 L 1161 0 A 39 39 0 0 1 1161 78 L 977 78 A 16 16 0 0 0 961 94 L 961 100 A 16 16 0 0 1 945 116 L 875 116 A 16 16 0 0 1 859 100 L 859 94 A 16 16 0 0 0 843 78 L 39 78 A 39 39 0 0 1 39 0 Z";
+  const pathNoTab =
+    "M 39 0 L 1161 0 A 39 39 0 0 1 1161 78 L 39 78 A 39 39 0 0 1 39 0 Z";
+
+  const wrapperHeight = showTab ? "h-[122px]" : "h-[78px]";
+  const viewBox = showTab ? "0 0 1200 122" : "0 0 1200 78";
+  const pathD = showTab ? pathWithTab : pathNoTab;
+
   return (
     <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
       {/* nav-wrapper — fixed-aspect frame that contains both the SVG-drawn
           nav silhouette and the actual interactive content. The SVG path
           and the tab live in the same coordinate space, so the tab is part
           of the nav's shape rather than a separate element glued below it. */}
-      <div className="pointer-events-auto relative w-full max-w-[1200px] h-[122px]">
+      <div className={`pointer-events-auto relative w-full max-w-[1200px] ${wrapperHeight}`}>
         {/* Nav silhouette — one SVG path traces the entire shape:
             rounded-pill body on top, concave "ears" that curve INWARD
             before the tab drops down, the tab's vertical sides, the tab's
@@ -27,13 +49,13 @@ export default function PillNav() {
             no seam in the shadow either. */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 1200 122"
+          viewBox={viewBox}
           preserveAspectRatio="none"
           aria-hidden="true"
           style={{ overflow: "visible" }}
         >
           <path
-            d="M 39 0 L 1161 0 A 39 39 0 0 1 1161 78 L 977 78 A 16 16 0 0 0 961 94 L 961 100 A 16 16 0 0 1 945 116 L 875 116 A 16 16 0 0 1 859 100 L 859 94 A 16 16 0 0 0 843 78 L 39 78 A 39 39 0 0 1 39 0 Z"
+            d={pathD}
             fill="#ffffff"
             style={{
               filter:
@@ -46,23 +68,26 @@ export default function PillNav() {
             representing where the lanyard ribbon threads through the
             plastic clip. Positioned with percentages so it scales with
             the wrapper at narrower viewports (the underlying SVG path
-            scales the same way via `preserveAspectRatio="none"`). */}
-        <span
-          aria-hidden="true"
-          className="absolute rounded-[4px] z-[2]"
-          style={{
-            left: "calc(892 / 1200 * 100%)",
-            top: "calc(96 / 122 * 100%)",
-            width: "calc(36 / 1200 * 100%)",
-            height: "calc(5 / 122 * 100%)",
-            background: "#cfcfcf",
-            // Inset shadow sells the slot as a real cutout: top edge dark
-            // from the strap pressing down through it, bottom edge a hair
-            // brighter from the white tab beneath catching ambient light.
-            boxShadow:
-              "inset 0 1px 1.5px rgba(0,0,0,0.45), inset 0 -0.5px 0 rgba(255,255,255,0.6)",
-          }}
-        />
+            scales the same way via `preserveAspectRatio="none"`). Only
+            renders on the home page, where the tab itself is shown. */}
+        {showTab && (
+          <span
+            aria-hidden="true"
+            className="absolute rounded-[4px] z-[2]"
+            style={{
+              left: "calc(892 / 1200 * 100%)",
+              top: "calc(96 / 122 * 100%)",
+              width: "calc(36 / 1200 * 100%)",
+              height: "calc(5 / 122 * 100%)",
+              background: "#cfcfcf",
+              // Inset shadow sells the slot as a real cutout: top edge dark
+              // from the strap pressing down through it, bottom edge a hair
+              // brighter from the white tab beneath catching ambient light.
+              boxShadow:
+                "inset 0 1px 1.5px rgba(0,0,0,0.45), inset 0 -0.5px 0 rgba(255,255,255,0.6)",
+            }}
+          />
+        )}
 
         {/* Navigation content — sits on top of the SVG in the nav-body
             region (top 78px). Padding mirrors the user's spec: pl-10 for

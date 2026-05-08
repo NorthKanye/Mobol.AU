@@ -273,51 +273,83 @@ export default function ContactCards() {
         ? "minmax(0,0fr) minmax(0,1fr)"
         : "minmax(0,1fr) minmax(0,1fr)";
 
-  return (
-    <div
-      role="region"
-      aria-label="Get in touch"
-      style={
-        {
-          ["--cards-cols" as string]: desktopColumns,
-          ["--cards-rows" as string]: mobileRows,
-        } as React.CSSProperties
-      }
-      className="contact-cards grid h-full gap-4 sm:gap-5 lg:gap-6"
-    >
-      <CardShell
-        open={view === "form"}
-        visible={view !== "chat"}
-        triggerRef={formTriggerRef}
-        controlsId={formRegionId}
-        headingId={formHeadingId}
-        eyebrow="Form"
-        title="Tell us about your project."
-        blurb="Share the brief, the timeline, the budget — the more you give us, the sharper our reply."
-        Icon={FormCardIcon}
-        onOpen={() => open("form")}
-        onBack={close}
-        ariaLabel="Open contact form"
-      >
-        <ContactForm />
-      </CardShell>
+  const expanded = view !== "split";
 
-      <CardShell
-        open={view === "chat"}
-        visible={view !== "form"}
-        triggerRef={chatTriggerRef}
-        controlsId={chatRegionId}
-        headingId={chatHeadingId}
-        eyebrow="AI chat"
-        title="Have a quick question?"
-        blurb="Chat with a streaming assistant. Try a starter prompt or write your own."
-        Icon={ChatCardIcon}
-        onOpen={() => open("chat")}
-        onBack={close}
-        ariaLabel="Open AI chat"
+  return (
+    <>
+      {/* Page-level heading — collapses to zero height on expand so the
+          opened card fills the viewport without forcing the user to scroll.
+          The grid-row 1fr→0fr trick animates intrinsic height smoothly. */}
+      <div
+        className="contact-shell-header"
+        data-collapsed={expanded ? "true" : "false"}
+        aria-hidden={expanded}
       >
-        <ChatPanel active={view === "chat"} />
-      </CardShell>
-    </div>
+        <div className="max-w-[640px]">
+          <p className="text-[11px] tracking-[0.22em] uppercase text-ink-3 mb-5">
+            Contact
+          </p>
+          <h1 className="text-ink font-bold leading-[1.02] tracking-tighter-display text-[clamp(2.25rem,4vw,3.5rem)]">
+            Two ways to start
+            <br />a conversation.
+          </h1>
+          <p className="mt-6 text-[15px] leading-[1.6] text-ink-body max-w-[520px]">
+            Send us a project brief and we&apos;ll reply within two business
+            days, or chat live with our assistant for quick answers. Pick
+            whichever feels right.
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="min-h-[640px] sm:min-h-[560px] lg:min-h-[600px] transition-[min-height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      >
+        <div
+          role="region"
+          aria-label="Get in touch"
+          style={
+            {
+              ["--cards-cols" as string]: desktopColumns,
+              ["--cards-rows" as string]: mobileRows,
+            } as React.CSSProperties
+          }
+          className="contact-cards grid h-full gap-4 sm:gap-5 lg:gap-6"
+        >
+          <CardShell
+            open={view === "form"}
+            visible={view !== "chat"}
+            triggerRef={formTriggerRef}
+            controlsId={formRegionId}
+            headingId={formHeadingId}
+            eyebrow="Form"
+            title="Tell us about your project."
+            blurb="Share the brief, the timeline, the budget — the more you give us, the sharper our reply."
+            Icon={FormCardIcon}
+            onOpen={() => open("form")}
+            onBack={close}
+            ariaLabel="Open contact form"
+          >
+            <ContactForm />
+          </CardShell>
+
+          <CardShell
+            open={view === "chat"}
+            visible={view !== "form"}
+            triggerRef={chatTriggerRef}
+            controlsId={chatRegionId}
+            headingId={chatHeadingId}
+            eyebrow="AI chat"
+            title="Have a quick question?"
+            blurb="Chat with a streaming assistant. Try a starter prompt or write your own."
+            Icon={ChatCardIcon}
+            onOpen={() => open("chat")}
+            onBack={close}
+            ariaLabel="Open AI chat"
+          >
+            <ChatPanel active={view === "chat"} />
+          </CardShell>
+        </div>
+      </div>
+    </>
   );
 }

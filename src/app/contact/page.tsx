@@ -43,28 +43,11 @@ const JSON_LD_STRING = JSON.stringify({
 
 export default function ContactPage() {
   return (
-    <div className="min-h-[100dvh] pt-32 sm:pt-36 pb-16 sm:pb-20">
+    <div className="pt-32 sm:pt-40 pb-12 sm:pb-16">
       <script type="application/ld+json">{JSON_LD_STRING}</script>
 
       <div className="mx-auto w-full max-w-[1200px] px-6 sm:px-10">
-        <header className="mb-10 sm:mb-14 max-w-[640px]">
-          <p className="text-[11px] tracking-[0.22em] uppercase text-ink-3 mb-5">
-            Contact
-          </p>
-          <h1 className="text-ink font-bold leading-[1.02] tracking-tighter-display text-[clamp(2.25rem,4vw,3.5rem)]">
-            Two ways to start
-            <br />a conversation.
-          </h1>
-          <p className="mt-6 text-[15px] leading-[1.6] text-ink-body max-w-[520px]">
-            Send us a project brief and we'll reply within two business days,
-            or chat live with our assistant for quick answers. Pick whichever
-            feels right.
-          </p>
-        </header>
-
-        <div className="min-h-[640px] sm:min-h-[560px] lg:min-h-[600px]">
-          <ContactCards />
-        </div>
+        <ContactCards />
       </div>
     </div>
   );
