@@ -4,21 +4,20 @@ export default function HeroText() {
   return (
     <div className="max-w-[520px]">
       <p className="text-[11px] tracking-[0.22em] uppercase text-ink-3 mb-8">
-        Digital agency for ambitious brands
+        Aboriginal-owned · Perth, WA
       </p>
 
       <h1 className="text-ink font-bold leading-[1.02] tracking-tighter-display text-[clamp(2.5rem,3.8vw,3.875rem)]">
-        Brand identities
+        Websites, brands,
         <br />
-        and premium
+        and AI tools
         <br />
-        websites.
+        built with care.
       </h1>
 
       <p className="mt-7 text-[15px] leading-[1.55] text-ink-body max-w-[400px]">
-        Mobol is a digital agency creating thoughtful brands, intuitive
-        websites, and engaging digital experiences that help businesses grow
-        and scale.
+        For small businesses, growing teams, and community organisations
+        across Australia. Honest scope, fair pricing, real partnership.
       </p>
 
       <div className="mt-10 flex items-center gap-7">
@@ -38,7 +37,7 @@ export default function HeroText() {
           Start a project
         </Link>
         <Link
-          href="#work"
+          href="#who"
           className="
             inline-flex items-center gap-1.5
             text-[14px] font-medium text-ink
@@ -47,7 +46,7 @@ export default function HeroText() {
             focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink
           "
         >
-          View our work
+          How we work
           <svg
             width="14"
             height="14"

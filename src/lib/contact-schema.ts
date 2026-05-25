@@ -29,7 +29,7 @@ export const BUDGET_LABELS: Record<Budget, string> = {
 export const NAME_MAX = 80;
 export const EMAIL_MAX = 120;
 export const COMPANY_MAX = 120;
-export const MESSAGE_MIN = 20;
+export const PHONE_MAX = 40;
 export const MESSAGE_MAX = 2000;
 
 const optionalString = (max: number) =>
@@ -50,23 +50,35 @@ export const contactSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .email("Please enter a valid email")
+    .email("That doesn't look like a valid email — please double-check")
     .max(EMAIL_MAX),
   company: optionalString(COMPANY_MAX),
+  phone: z
+    .string()
+    .trim()
+    .max(PHONE_MAX)
+    .regex(
+      /^[+()\d\s\-]*$/,
+      "Use only digits, spaces, plus, hyphens, or brackets",
+    )
+    .optional()
+    .or(z.literal("")),
   projectType: z.enum(PROJECT_TYPES, {
-    message: "Pick a project type",
+    message: "Please pick a project type",
   }),
   budget: z.enum(BUDGETS).optional().or(z.literal("")),
   message: z
     .string()
     .trim()
-    .min(MESSAGE_MIN, "A few sentences helps us reply meaningfully")
+    .min(1, "Please add a message")
     .max(MESSAGE_MAX, `Please keep it under ${MESSAGE_MAX} characters`),
   consent: z.literal("on", {
-    message: "Please agree to be contacted",
+    message: "Please tick this so we know it's OK to reply",
   }),
-  // Honeypot — bots fill every input. Real users never see this field.
-  website: z.string().max(0).optional().or(z.literal("")),
+  // Honeypot field "website" is intentionally NOT in the schema — it's
+  // checked directly on FormData in actions.ts before Zod runs, so bots
+  // that fill it get a silent success rather than a Zod rejection that
+  // would leak the honeypot's existence.
 });
 
 export type ContactInput = z.infer<typeof contactSchema>;

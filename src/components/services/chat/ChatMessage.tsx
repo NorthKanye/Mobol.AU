@@ -6,6 +6,7 @@ type Props = {
   message: RenderedMessage;
   reducedMotion: boolean;
   isLatest: boolean;
+  isFirstInGroup: boolean;
   onToggleThinkingAction: (id: string) => void;
 };
 
@@ -13,6 +14,7 @@ export default function ChatMessage({
   message,
   reducedMotion,
   isLatest,
+  isFirstInGroup,
   onToggleThinkingAction,
 }: Props) {
   const isUser = message.role === "user";
@@ -27,11 +29,25 @@ export default function ChatMessage({
   // flash in alongside the thinking sequence). Other messages without a
   // thinking slice render the widget immediately.
   const widgetReady = !message.thinking || message.thinking.revealComplete;
+  // The thinking-step → widget transition already has a built-in 200ms beat
+  // in useChatScript (post-collapse). For plain bubbles, default to 140ms so
+  // the widget eases in just after the message bubble lands.
+  const widgetDelayMs =
+    message.widgetEnterDelayMs ?? (message.thinking ? 0 : 140);
 
   return (
     <div className={`w-full flex ${isUser ? "justify-end" : "justify-start"}`}>
+      {!isUser ? (
+        <div className="shrink-0 w-[22px] mr-2 mt-[2px]" aria-hidden="true">
+          {isFirstInGroup ? (
+            <div className="w-[22px] h-[22px] rounded-full bg-ink text-surface flex items-center justify-center text-[10px] font-semibold leading-none tracking-tight">
+              M
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div
-        className={`flex flex-col gap-2 ${isUser ? "items-end" : "items-start"} max-w-[88%]`}
+        className={`flex flex-col gap-2.5 ${isUser ? "items-end" : "items-start"} max-w-[88%]`}
       >
         {message.thinking ? (
           <ThinkingStepsReveal
@@ -44,8 +60,8 @@ export default function ChatMessage({
           <div
             className={`${
               isUser
-                ? "bg-bg text-ink rounded-2xl px-4 py-2.5 text-[14px] leading-[1.45]"
-                : "text-ink text-[14px] leading-[1.5] px-1"
+                ? "bg-[#E5E3DC] text-ink rounded-[20px] px-3.5 py-2 text-[13px] leading-[1.45]"
+                : "text-ink text-[13px] sm:text-[14px] leading-[1.55] px-1 max-w-[420px]"
             } ${animateIn ? "animate-chat-message-in" : ""}`}
           >
             {message.text}
@@ -58,7 +74,12 @@ export default function ChatMessage({
           </div>
         ) : null}
         {message.widget && widgetReady ? (
-          <div className={animateIn ? "animate-chat-widget-in" : ""}>
+          <div
+            className={animateIn ? "animate-chat-widget-in" : ""}
+            style={
+              animateIn ? { animationDelay: `${widgetDelayMs}ms` } : undefined
+            }
+          >
             {renderWidget(message.widget, {
               reducedMotion,
               isLatest,

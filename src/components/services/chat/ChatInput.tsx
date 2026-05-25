@@ -64,10 +64,10 @@ export default function ChatInput({ phase, onSendMessageAction }: Props) {
         e.preventDefault();
         submit();
       }}
-      className="border-t border-border bg-surface px-3 py-2.5 flex items-center gap-2"
+      className="border-t border-border bg-surface/96 backdrop-blur-sm px-3 py-3 flex items-end gap-2"
     >
       <div
-        className={`flex-1 rounded-full ${readyPulse ? "chat-input-ready" : ""}`}
+        className={`flex-1 rounded-[24px] ${readyPulse ? "chat-input-ready" : ""}`}
       >
         <textarea
           value={value}
@@ -86,7 +86,7 @@ export default function ChatInput({ phase, onSendMessageAction }: Props) {
           style={{
             transition: "opacity 350ms ease-out",
           }}
-          className={`w-full resize-none bg-bg rounded-full px-4 py-2 text-[13px] leading-[1.4] text-ink placeholder:text-ink-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/15 disabled:opacity-60 disabled:cursor-not-allowed max-h-20 ${
+          className={`w-full resize-none bg-bg border border-border rounded-[24px] px-4 py-2.5 text-[13px] leading-[1.4] text-ink placeholder:text-ink-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-ink/15 focus:border-ink/20 disabled:opacity-65 disabled:cursor-not-allowed max-h-20 ${
             placeholderVisible ? "placeholder:opacity-100" : "placeholder:opacity-0"
           }`}
         />
@@ -95,7 +95,7 @@ export default function ChatInput({ phase, onSendMessageAction }: Props) {
         type="submit"
         disabled={disabled || value.trim().length === 0}
         aria-label="Send message"
-        className="shrink-0 w-8 h-8 rounded-full bg-ink text-surface flex items-center justify-center transition-transform hover:scale-[1.04] active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="shrink-0 w-9 h-9 rounded-full bg-ink text-surface flex items-center justify-center transition-transform hover:scale-[1.04] active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path

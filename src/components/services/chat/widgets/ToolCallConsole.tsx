@@ -9,69 +9,85 @@ type Props = {
   isLatest: boolean;
 };
 
-// Renders a developer-feel console of tool calls. Each call = a "→ call" line
-// followed by a "← result" line, revealed sequentially. Mono font, ink palette.
 export default function ToolCallConsole({ widget, reducedMotion, isLatest }: Props) {
   const perCall = widget.perCallMs ?? 800;
   const total = widget.calls.length;
-  const [shown, setShown] = useState(
-    reducedMotion || !isLatest ? total * 2 : 0,
-  );
+  const [shown, setShown] = useState(reducedMotion || !isLatest ? total : 0);
+  const [expanded, setExpanded] = useState(0);
 
   useEffect(() => {
     if (reducedMotion || !isLatest) {
-      setShown(total * 2);
+      setShown(total);
       return;
     }
     setShown(0);
     const timers: number[] = [];
-    for (let i = 1; i <= total * 2; i++) {
-      // Each "call" shows its line then its result, alternating
-      timers.push(
-        window.setTimeout(() => setShown(i), i * (perCall / 2)),
-      );
+    for (let i = 1; i <= total; i++) {
+      timers.push(window.setTimeout(() => setShown(i), i * perCall));
     }
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [reducedMotion, isLatest, total, perCall]);
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-3 max-w-[380px]">
+    <div className="bg-surface border border-border rounded-[20px] p-3.5 max-w-[420px] shadow-[0_16px_42px_rgba(17,17,17,0.05)]">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-2">
-          Tool calls · runtime
-        </p>
-        <span className="text-[10px] tabular-nums text-ink-3">
-          {Math.min(Math.ceil(shown / 2), total)}/{total}
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-2">
+            {widget.title ?? "Tool calls"}
+          </p>
+          {widget.subtitle ? (
+            <p className="mt-0.5 text-[11px] text-ink-2">{widget.subtitle}</p>
+          ) : null}
+        </div>
+        <span className="rounded-full bg-bg border border-border px-2 py-1 text-[10px] tabular-nums text-ink-2">
+          {Math.min(shown, total)}/{total}
         </span>
       </div>
-      <pre
-        className="text-[11px] leading-[1.5] text-ink font-mono whitespace-pre-wrap break-words"
-        style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace' }}
-      >
-        {widget.calls.map((c, i) => {
-          const callShown = shown >= i * 2 + 1;
-          const resultShown = shown >= i * 2 + 2;
+      <ul className="space-y-2">
+        {widget.calls.map((call, i) => {
+          const visible = shown > i;
+          if (!visible) return null;
+          const isExpanded = expanded === i;
           return (
-            <span key={i}>
-              {callShown ? (
-                <span className={reducedMotion ? "" : "animate-chat-message-in"}>
-                  <span className="text-ink-2">→ </span>
-                  <span className="font-semibold">{c.name}</span>
-                  <span className="text-ink-body">({c.args})</span>
-                  {"\n"}
+            <li
+              key={call.name}
+              className={`rounded-2xl border border-border bg-bg px-3 py-2.5 ${
+                reducedMotion ? "" : "animate-chat-message-in"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setExpanded((value) => (value === i ? -1 : i))}
+                aria-expanded={isExpanded}
+                className="w-full text-left flex items-start gap-2.5"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-1 shrink-0 w-2 h-2 rounded-full bg-[#28c840]"
+                />
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-[12px] font-medium text-ink truncate">
+                      {call.label ?? call.name}
+                    </span>
+                    <span className="text-[10px] text-ink-2 font-mono">
+                      {isExpanded ? "hide" : "result"}
+                    </span>
+                  </span>
+                  <span className="mt-0.5 block text-[10px] font-mono text-ink-2 truncate">
+                    {call.name}({call.args})
+                  </span>
                 </span>
+              </button>
+              {isExpanded ? (
+                <div className="mt-2 rounded-xl bg-surface border border-border px-2.5 py-2 text-[11px] leading-[1.45] font-mono text-ink-body animate-chat-widget-in">
+                  {call.result}
+                </div>
               ) : null}
-              {resultShown ? (
-                <span className={reducedMotion ? "" : "animate-chat-message-in"}>
-                  <span className="text-[#2a8a4f]">← </span>
-                  <span className="text-ink-body">{c.result}</span>
-                  {i < widget.calls.length - 1 ? "\n" : ""}
-                </span>
-              ) : null}
-            </span>
+            </li>
           );
         })}
-      </pre>
+      </ul>
     </div>
   );
 }

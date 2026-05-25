@@ -1,29 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter_Tight, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import PillNav from "@/components/nav/PillNav";
+import { NavHideProvider } from "@/components/nav/NavHideContext";
+import Footer from "@/components/footer/Footer";
+import CookieBanner from "@/components/cookies/CookieBanner";
 import "./globals.css";
-
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["italic"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mobol.example"),
@@ -36,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f0efec",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -45,17 +27,21 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${interTight.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
-      <body className="min-h-screen bg-bg text-ink font-sans antialiased selection:bg-ink selection:text-bg">
+      <body className="min-h-screen bg-surface text-ink font-sans antialiased selection:bg-ink selection:text-bg">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-full focus:bg-ink focus:text-surface focus:text-sm focus:font-medium focus:shadow-[0_8px_24px_rgba(17,17,17,0.18)]"
         >
           Skip to content
         </a>
-        <PillNav />
-        <main id="main-content">{children}</main>
+        <NavHideProvider>
+          <PillNav />
+          <main id="main-content">{children}</main>
+          <Footer />
+        </NavHideProvider>
+        <CookieBanner />
       </body>
     </html>
   );

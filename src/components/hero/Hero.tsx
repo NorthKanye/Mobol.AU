@@ -5,28 +5,28 @@ import Lanyard from "@/components/lanyard/Lanyard";
 export default function Hero() {
   return (
     <section
-      className="relative w-full overflow-hidden min-h-[820px] lg:min-h-[88vh] xl:min-h-[860px]"
+      className="relative w-full overflow-hidden min-h-[820px] lg:min-h-[88vh] xl:min-h-[860px] bg-surface"
       aria-label="Hero"
     >
-      {/* Lanyard hangs from the nav's threading slot. The alignment shell
-          mirrors PillNav's nav-wrapper geometry (`max-w-[1200px] mx-auto px-6`)
-          and positions the lanyard at the same `910/1200` ratio the slot
-          uses, so strap and slot share one anchor and never drift apart at
-          any viewport width. As the hero scrolls out, the lanyard rides
-          along — no fixed layer, no scroll-linked translate. The strap-leak
-          above viewport y=24 (during the lanyard's transit through the gap
-          above the nav pill) is masked by <NavGapMask/> in <PillNav/>. */}
+      {/* Lanyard hangs beneath the pill nav. The alignment shell mirrors
+          PillNav's nav-wrapper geometry (`max-w-[1200px] mx-auto px-6`) so
+          the strap stays anchored under the same point on the pill at any
+          viewport width. Strap top sits flush at the pill body bottom edge
+          (viewport y = 24 top-6 + 78 pill-height = 102). As the hero
+          scrolls out, the lanyard rides along — no fixed layer, no
+          scroll-linked translate. The strap-leak above viewport y=24
+          (during the lanyard's transit through the gap above the pill) is
+          masked by <NavGapMask/> in <PillNav/>. */}
       <div
         aria-hidden="true"
-        className="hidden sm:block absolute top-[120px] inset-x-0 px-6 z-10 pointer-events-none"
+        className="hidden sm:block absolute top-[102px] inset-x-0 px-6 z-10 pointer-events-none"
       >
         <div className="relative mx-auto max-w-[1200px]">
           <div
             className="absolute top-0"
             style={{
-              // 892 + 18 = 910 — slot left edge plus half slot width, i.e.
-              // the slot's center, expressed as the same fraction of the
-              // 1200-unit nav-wrapper that the slot uses.
+              // Right-of-center horizontal anchor (910/1200 of the
+              // nav-wrapper width).
               left: "calc(910 / 1200 * 100%)",
               transform: "translateX(-50%)",
             }}
@@ -48,6 +48,14 @@ export default function Hero() {
 
       {/* Decorative scatter cards (positioned absolutely inside the section) */}
       <HeroScatter />
+
+      {/* Sentinel observed by NavHideProvider to detect when the hero has
+          scrolled fully out of view — drives the threshold-based nav hide. */}
+      <div
+        data-hero-end
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 h-px pointer-events-none"
+      />
     </section>
   );
 }

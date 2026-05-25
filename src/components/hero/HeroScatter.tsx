@@ -20,8 +20,8 @@ export default function HeroScatter() {
             relative
             w-[420px] h-[300px] xl:w-[480px] xl:h-[340px]
             rounded-2xl bg-surface
-            shadow-[0_4px_10px_rgba(17,17,17,0.05),_0_28px_60px_rgba(17,17,17,0.10)]
-            border border-black/[0.05]
+            shadow-[0_4px_10px_rgba(17,17,17,0.04),_0_18px_40px_rgba(17,17,17,0.06)]
+            border border-black/[0.06]
             overflow-hidden
             -rotate-[12deg] origin-top-right
           "
@@ -34,13 +34,13 @@ export default function HeroScatter() {
           </div>
 
           {/* Window body — clean placeholder canvas */}
-          <div className="relative flex-1 h-[calc(100%-40px)] bg-[#fafaf9]">
+          <div className="relative flex-1 h-[calc(100%-40px)] bg-surface">
             {/* Subtle grid hint */}
             <div
               className="absolute inset-0 opacity-[0.5]"
               style={{
                 backgroundImage:
-                  "linear-gradient(to right, rgba(17,17,17,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(17,17,17,0.04) 1px, transparent 1px)",
+                  "linear-gradient(to right, rgba(17,17,17,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(17,17,17,0.025) 1px, transparent 1px)",
                 backgroundSize: "32px 32px",
               }}
             />
@@ -97,8 +97,8 @@ export default function HeroScatter() {
             rotate-[6deg]
             w-[180px]
             rounded-2xl bg-surface
-            shadow-[0_2px_4px_rgba(17,17,17,0.04),_0_22px_44px_rgba(17,17,17,0.10)]
-            border border-black/[0.04]
+            shadow-[0_2px_4px_rgba(17,17,17,0.03),_0_14px_32px_rgba(17,17,17,0.06)]
+            border border-black/[0.06]
             p-4
           "
         >

@@ -47,10 +47,13 @@ export type ChatWidget =
     }
   | {
       type: "toolCall";
+      title?: string;
+      subtitle?: string;
       calls: ReadonlyArray<{
         name: string;
         args: string;
         result: string;
+        label?: string;
       }>;
       perCallMs?: number;
     }
@@ -75,6 +78,90 @@ export type ChatWidget =
         tone?: [string, string];
         label?: string;
       }>;
+    }
+  | {
+      type: "ragAnswer";
+      question: string;
+      answer: ReadonlyArray<string>;
+      confidence?: string;
+      sources: ReadonlyArray<{
+        label: string;
+        detail: string;
+        match: string;
+      }>;
+    }
+  | {
+      type: "imageAnalysis";
+      eyebrow?: string;
+      title: string;
+      before: {
+        src: string;
+        alt: string;
+        label: string;
+      };
+      after: {
+        src: string;
+        alt: string;
+        label: string;
+      };
+      findings: ReadonlyArray<string>;
+      recommendation: string;
+      prompt: string;
+    }
+  | {
+      type: "voiceStudio";
+      title: string;
+      script: string;
+      durationSec: number;
+      accents: ReadonlyArray<{
+        id: string;
+        label: string;
+        accent: string;
+        expression: string;
+        src: string;
+        ready?: boolean;
+        tone: string;
+      }>;
+    }
+  | {
+      type: "generatedAssets";
+      eyebrow?: string;
+      title?: string;
+      badge?: string;
+      prompt: string;
+      variants: ReadonlyArray<{
+        label: string;
+        src: string;
+        alt: string;
+        note: string;
+      }>;
+    }
+  | {
+      type: "generatedVideo";
+      title: string;
+      posterSrc: string;
+      posterAlt: string;
+      placeholderSrc: string;
+      duration: string;
+      prompt?: string;
+      frames: ReadonlyArray<{
+        time: string;
+        label: string;
+      }>;
+    }
+  | {
+      type: "workflowAutomation";
+      title: string;
+      systems: ReadonlyArray<{
+        name: string;
+        action: string;
+        detail: string;
+        status: "queued" | "running" | "done";
+      }>;
+      summary: ReadonlyArray<{
+        label: string;
+        value: string;
+      }>;
     };
 
 export type ThinkingStepData = {
@@ -95,6 +182,9 @@ export type ChatStep =
       thinkingMs?: number;
       thinkingSteps?: ThinkingStepData[];
       thinkingStepMs?: number;
+      // Delay (ms) before the widget animates in, so the bubble lands first.
+      // Defaults to 140ms in ChatMessage; bump to 200-260 for heavy widgets.
+      widgetEnterDelayMs?: number;
     }
   | { kind: "pause"; ms: number };
 
@@ -120,4 +210,5 @@ export type RenderedMessage = {
   status: "revealing" | "complete";
   stepIndex?: number;
   thinking?: ThinkingState;
+  widgetEnterDelayMs?: number;
 };

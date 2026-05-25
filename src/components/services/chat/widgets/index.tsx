@@ -14,6 +14,12 @@ import ToolCallConsole from "./ToolCallConsole";
 import AgentFeed from "./AgentFeed";
 import ImpactDashboard from "./ImpactDashboard";
 import BrandAssetPack from "./BrandAssetPack";
+import RagAnswer from "./RagAnswer";
+import ImageAnalysisDemo from "./ImageAnalysisDemo";
+import VoiceStudio from "./VoiceStudio";
+import GeneratedAssets from "./GeneratedAssets";
+import GeneratedVideo from "./GeneratedVideo";
+import WorkflowAutomation from "./WorkflowAutomation";
 
 type WidgetCommon = { reducedMotion: boolean; isLatest: boolean };
 
@@ -45,5 +51,17 @@ export function renderWidget(widget: ChatWidget, common: WidgetCommon) {
       return <ImpactDashboard widget={widget} {...common} />;
     case "brandPack":
       return <BrandAssetPack widget={widget} {...common} />;
+    case "ragAnswer":
+      return <RagAnswer widget={widget} {...common} />;
+    case "imageAnalysis":
+      return <ImageAnalysisDemo widget={widget} {...common} />;
+    case "voiceStudio":
+      return <VoiceStudio widget={widget} {...common} />;
+    case "generatedAssets":
+      return <GeneratedAssets widget={widget} {...common} />;
+    case "generatedVideo":
+      return <GeneratedVideo widget={widget} {...common} />;
+    case "workflowAutomation":
+      return <WorkflowAutomation widget={widget} {...common} />;
   }
 }

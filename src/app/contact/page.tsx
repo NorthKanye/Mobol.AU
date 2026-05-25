@@ -4,12 +4,12 @@ import ContactCards from "./ContactCards";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Start a project with Mobol. Tell us about your brand, product, or website — or chat live with our streaming assistant.",
+    "Start a project with Mobol. Tell us about your brand, product, or website and we'll reply within two business days.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: "Contact Mobol",
     description:
-      "Start a project with Mobol. Tell us about your brand, product, or website — or chat live with our streaming assistant.",
+      "Start a project with Mobol. Tell us about your brand, product, or website and we'll reply within two business days.",
     url: "/contact",
     type: "website",
   },
@@ -28,7 +28,7 @@ const JSON_LD_STRING = JSON.stringify({
   "@type": "ContactPage",
   name: "Contact Mobol",
   description:
-    "Start a project with Mobol. Tell us about your brand, product, or website — or chat live with our streaming assistant.",
+    "Start a project with Mobol. Tell us about your brand, product, or website and we'll reply within two business days.",
   url: "/contact",
   mainEntity: {
     "@type": "Organization",

@@ -2,122 +2,100 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useNavHide } from "./NavHideContext";
+import ServicesDropdown from "./ServicesDropdown";
+import HamburgerButton from "./HamburgerButton";
+import MobileMenu from "./MobileMenu";
 
+// Track whether the viewport is below the md breakpoint (768px). Used to
+// gate the nav-hide behavior — on mobile we never hide the pill because
+// there's no peek-on-cursor to bring it back.
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+// Plain (non-disclosure) desktop links. Services renders separately as a
+// ServicesDropdown component so the catalog stays the source of truth.
 const links = [
-  { href: "#who", label: "who we are" },
-  { href: "#what", label: "what we do" },
-  { href: "#work", label: "work" },
-  { href: "/contact", label: "contact" },
+  { href: "/#who", label: "About" },
+  { href: "/#work", label: "Work" },
+  { href: "/contact", label: "Contact" },
 ];
 
-// Body — clean rounded pill at top, identical for both home and non-home.
-const bodyPath =
-  "M 39 0 L 1161 0 A 39 39 0 0 1 1161 78 L 39 78 A 39 39 0 0 1 39 0 Z";
-// Tab — only rendered on home. Lives in a separate <path> wrapped in
-// `.tab-retract` so it can slide up independently as the hero scrolls past.
-const tabPath =
-  "M 977 78 A 16 16 0 0 0 961 94 L 961 100 A 16 16 0 0 1 945 116 L 875 116 A 16 16 0 0 1 859 100 L 859 94 A 16 16 0 0 0 843 78 Z";
+// Soft elevation on white. Only applied on the home route, where the
+// lanyard hangs beneath the pill and needs the pill to read as physically
+// above the page. Off-home routes go flat so the pill stops perceptually
+// popping against a same-white body.
+const PILL_SHADOW =
+  "0 1px 2px rgba(17,17,17,0.03), 0 4px 10px rgba(17,17,17,0.03)";
+const PILL_STROKE = "rgba(17,17,17,0.07)";
 
 export default function PillNav() {
-  // The downward TAB (and its threading slot, plus the scroll-linked retract
-  // animation driven by TabRetractEffect) only makes visual sense on the home
-  // page, where the lanyard ribbon hangs from it. On every other route
-  // (e.g. /contact) there's no lanyard, so the tab would read as an orphan
-  // bump — collapse the nav to a clean rounded pill instead.
+  // `isHome` gates the two side effects that only make visual sense when the
+  // lanyard is mounted in <Hero/>: (a) the NavGapMask covering the 24px strip
+  // above the pill (where the strap transits on scroll), and (b) the soft
+  // PILL_SHADOW that seats the pill above the hanging lanyard.
   const pathname = usePathname();
-  const showTab = pathname === "/";
-
-  const wrapperHeight = showTab ? "h-[122px]" : "h-[78px]";
-  const viewBox = showTab ? "0 0 1200 122" : "0 0 1200 78";
+  const isHome = pathname === "/";
+  const { hidden, peeking, scrollHidden } = useNavHide();
+  const isMobile = useIsMobile();
+  // Mobile never hides — desktop still hides on scroll / chat-expand and
+  // peeks on cursor near top.
+  const effectivelyHidden = !isMobile && (hidden || scrollHidden) && !peeking;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
       {/* Nav-gap mask — covers the 24px transparent strip above the pill so
           the strap can't be seen leaking into it during the lanyard's
-          scroll-out transit. Only needed on home, where the lanyard exists.
+          scroll transit. Only needed on home, where the lanyard exists.
           z-45 sits above the lanyard (z-10 in Hero) and below the nav (z-50). */}
-      {showTab && (
+      {isHome && (
         <div
           aria-hidden="true"
           className="fixed top-0 inset-x-0 h-6 z-[45] pointer-events-none"
-          style={{ background: "var(--color-bg)" }}
+          style={{ background: "var(--color-surface)" }}
         />
       )}
-      <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none">
-        {/* nav-wrapper — fixed-aspect frame that contains both the SVG-drawn
-            nav silhouette and the actual interactive content. On home,
-            overflow-hidden caps the retracting tab and slot so they cannot
-            leak above the wrapper. Off-home, no tab/slot, no need for the
-            clip — and the wrapper shrinks to the body's 78px height. */}
+      <header
+        data-pill-nav=""
+        aria-hidden={effectivelyHidden || undefined}
+        inert={effectivelyHidden || undefined}
+        className="fixed top-6 inset-x-0 z-50 flex justify-center px-6 pointer-events-none"
+      >
+        {/* nav-wrapper — 78px frame holding the rounded body and interactive
+            content. NOT overflow-hidden: the body's drop-shadow needs to
+            extend past the wrapper's rectangular bounds without being
+            clipped to a visible square. */}
         <div
-          className={`pointer-events-auto relative w-full max-w-[1200px] ${wrapperHeight} ${
-            showTab ? "overflow-hidden" : ""
-          }`}
+          className="pointer-events-auto relative w-full max-w-[1200px] h-[78px]"
         >
-          {/* Nav silhouette. Body is always drawn. The tab is a separate
-              <g className="tab-retract"> on home only — slides up via the
-              `--tab-pull` CSS variable written by TabRetractEffect. Both
-              paths are #ffffff and meet flush at y=78 between x=843 and
-              x=977 so visually they're indistinguishable from a single
-              union path while at scroll y=0. */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox={viewBox}
-            preserveAspectRatio="none"
+          {/* Body — rounded-full white pill at every breakpoint. */}
+          <div
+            className="absolute inset-x-0 top-0 h-[78px] rounded-full bg-white pointer-events-none"
+            style={{
+              border: `1px solid ${PILL_STROKE}`,
+              boxShadow: isHome ? PILL_SHADOW : undefined,
+            }}
             aria-hidden="true"
-            style={{ overflow: "visible" }}
-          >
-            <path
-              d={bodyPath}
-              fill="#ffffff"
-              style={{
-                filter:
-                  "drop-shadow(0 1px 2px rgba(17,17,17,0.04)) drop-shadow(0 6px 14px rgba(17,17,17,0.06))",
-              }}
-            />
-            {showTab && (
-              <g className="tab-retract">
-                <path d={tabPath} fill="#ffffff" />
-              </g>
-            )}
-          </svg>
+          />
 
-          {/* Threading slot — the small horizontal handle inside the tab,
-              representing where the lanyard ribbon threads through the
-              plastic clip. Only renders on home (where the tab itself is
-              shown), and hidden below sm so it disappears in lockstep with
-              the lanyard on mobile (no orphaned grey rect). Fades out as it
-              retracts into the body region. */}
-          {showTab && (
-            <span
-              aria-hidden="true"
-              className="tab-retract absolute rounded-[4px] z-[2] hidden sm:block"
-              style={{
-                left: "calc(892 / 1200 * 100%)",
-                top: "calc(96 / 122 * 100%)",
-                width: "calc(36 / 1200 * 100%)",
-                height: "calc(5 / 122 * 100%)",
-                background: "#cfcfcf",
-                // Inset shadow sells the slot as a real cutout: top edge dark
-                // from the strap pressing down through it, bottom edge a hair
-                // brighter from the white tab beneath catching ambient light.
-                boxShadow:
-                  "inset 0 1px 1.5px rgba(0,0,0,0.45), inset 0 -0.5px 0 rgba(255,255,255,0.6)",
-                // Fade the slot out as it retracts into the body region — a
-                // grey stripe on the white pill body would otherwise read as
-                // a visual artifact. Linear from 1 (untouched) at tab-pull≤18
-                // to 0 at tab-pull≥78 (slot fully inside the body region).
-                opacity: "calc(1 - (var(--tab-pull, 0px) - 18px) / 60px)",
-              }}
-            />
-          )}
-
-          {/* Navigation content — sits on top of the SVG in the nav-body
-              region (top 78px). Padding mirrors the user's spec: pl-10 for
-              logo breathing room, pr-3 to butt the CTA against the right
-              rounded edge. */}
+          {/* Navigation content — sits on top of the body div. On mobile we
+              use symmetric px-4 so the logo and hamburger sit equidistant
+              from the rounded edges (visually centred); desktop keeps pl-10
+              pr-3 for logo breathing room and CTA tucked against the pill's
+              right curve. */}
           <nav
-            className="relative z-10 h-[78px] flex items-center justify-between pl-10 pr-3"
+            className="relative z-10 h-[78px] flex items-center justify-between px-4 md:pl-10 md:pr-3"
             aria-label="Primary"
           >
             <Link
@@ -131,7 +109,10 @@ export default function PillNav() {
               mobol
             </Link>
 
-            <ul className="hidden md:flex items-center justify-center gap-16 text-[15px] text-ink">
+            <ul className="hidden md:flex items-center justify-center gap-12 text-[15px] text-ink">
+              <li>
+                <ServicesDropdown />
+              </li>
               {links.map((l) => (
                 <li key={l.href}>
                   <Link
@@ -148,10 +129,11 @@ export default function PillNav() {
               ))}
             </ul>
 
+            {/* Desktop CTA — visible md+ only */}
             <Link
               href="/contact"
               className="
-                inline-flex items-center justify-center
+                hidden md:inline-flex items-center justify-center
                 h-[50px] px-7
                 rounded-full
                 bg-ink text-surface
@@ -162,9 +144,24 @@ export default function PillNav() {
             >
               Start a project
             </Link>
+
+            {/* Mobile hamburger — visible < md only */}
+            <div className="md:hidden">
+              <HamburgerButton
+                open={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen((v) => !v)}
+              />
+            </div>
           </nav>
         </div>
       </header>
+
+      {/* Mobile menu — native <dialog>, mounted alongside the nav so its
+          focus + scroll-lock semantics are independent of the pill itself. */}
+      <MobileMenu
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
     </>
   );
 }

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useNavHide } from "@/components/nav/NavHideContext";
 import ContactForm from "./ContactForm";
 import ChatPanel from "./ChatPanel";
 
@@ -98,6 +99,7 @@ interface CardShellProps {
   children: ReactNode;
   ariaLabel: string;
   headingId: string;
+  disabled?: boolean;
 }
 
 function CardShell({
@@ -114,69 +116,104 @@ function CardShell({
   children,
   ariaLabel,
   headingId,
+  disabled = false,
 }: CardShellProps) {
   return (
     <div
       aria-hidden={!visible}
+      aria-disabled={disabled || undefined}
       className={`
         relative h-full min-w-0 min-h-0 overflow-hidden
         rounded-2xl bg-surface border border-black/[0.04]
-        shadow-[0_1px_1px_rgba(17,17,17,0.03),_0_12px_32px_rgba(17,17,17,0.06),_0_32px_64px_rgba(17,17,17,0.05)]
-        transition-[opacity,transform] duration-300
-        ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}
+        ${
+          open
+            ? "shadow-[inset_0_1px_0_rgba(255,255,255,0.6),_0_2px_4px_rgba(17,17,17,0.04),_0_18px_44px_rgba(17,17,17,0.10),_0_42px_84px_rgba(17,17,17,0.06)]"
+            : "shadow-[0_1px_1px_rgba(17,17,17,0.03),_0_12px_32px_rgba(17,17,17,0.06),_0_32px_64px_rgba(17,17,17,0.05)]"
+        }
+        transition-[opacity,transform,box-shadow] duration-300
+        ${visible ? (disabled && !open ? "opacity-[0.78]" : "opacity-100") : "opacity-0 pointer-events-none"}
       `}
     >
       {!open ? (
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={onOpen}
-          aria-expanded={false}
-          aria-controls={controlsId}
-          aria-label={ariaLabel}
-          className="
-            group block w-full h-full text-left
-            p-7 sm:p-9
-            cursor-pointer
-            focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ink
-            transition-transform duration-300
-            hover:scale-[1.005]
-          "
-        >
-          <span className="flex items-center gap-3 text-ink-2 transition-colors group-hover:text-ink">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.04] group-hover:bg-ink/[0.08] transition-colors">
-              <Icon />
+        disabled ? (
+          <div
+            aria-label={ariaLabel}
+            className="
+              block w-full h-full text-left
+              p-7 sm:p-9
+              cursor-default select-none
+            "
+          >
+            <span className="flex items-center gap-3 text-ink-2">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.04]">
+                <Icon />
+              </span>
+              <span className="text-[11px] tracking-[0.22em] uppercase">
+                {eyebrow}
+              </span>
             </span>
-            <span className="text-[11px] tracking-[0.22em] uppercase">
-              {eyebrow}
+            <h2 className="mt-7 text-[clamp(1.75rem,2.6vw,2.25rem)] font-bold tracking-tighter-display text-ink leading-[1.05]">
+              {title}
+            </h2>
+            <p className="mt-3 text-[14.5px] leading-[1.55] text-ink-body max-w-[400px]">
+              {blurb}
+            </p>
+            <span className="mt-8 inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-ink/[0.05] text-ink-2 text-[11px] tracking-[0.22em] uppercase">
+              Coming soon
             </span>
-          </span>
-          <h2 className="mt-7 text-[clamp(1.75rem,2.6vw,2.25rem)] font-bold tracking-tighter-display text-ink leading-[1.05]">
-            {title}
-          </h2>
-          <p className="mt-3 text-[14.5px] leading-[1.55] text-ink-body max-w-[400px]">
-            {blurb}
-          </p>
-          <span className="mt-8 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink">
-            Open
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden="true"
-              className="transition-transform group-hover:translate-x-0.5"
-            >
-              <path
-                d="M3.5 7h7M7.5 3.5L11 7l-3.5 3.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </button>
+          </div>
+        ) : (
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={onOpen}
+            aria-expanded={false}
+            aria-controls={controlsId}
+            aria-label={ariaLabel}
+            className="
+              group block w-full h-full text-left
+              p-7 sm:p-9
+              cursor-pointer
+              focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ink
+              transition-transform duration-300
+              hover:scale-[1.005]
+            "
+          >
+            <span className="flex items-center gap-3 text-ink-2 transition-colors group-hover:text-ink">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.04] group-hover:bg-ink/[0.08] transition-colors">
+                <Icon />
+              </span>
+              <span className="text-[11px] tracking-[0.22em] uppercase">
+                {eyebrow}
+              </span>
+            </span>
+            <h2 className="mt-7 text-[clamp(1.75rem,2.6vw,2.25rem)] font-bold tracking-tighter-display text-ink leading-[1.05]">
+              {title}
+            </h2>
+            <p className="mt-3 text-[14.5px] leading-[1.55] text-ink-body max-w-[400px]">
+              {blurb}
+            </p>
+            <span className="mt-8 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink">
+              Open
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-0.5"
+              >
+                <path
+                  d="M3.5 7h7M7.5 3.5L11 7l-3.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+        )
       ) : (
         <div
           id={controlsId}
@@ -210,6 +247,7 @@ function CardShell({
 
 export default function ContactCards() {
   const [view, setView] = useState<View>("split");
+  const { setHidden } = useNavHide();
   const formTriggerRef = useRef<HTMLButtonElement | null>(null);
   const chatTriggerRef = useRef<HTMLButtonElement | null>(null);
   const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -241,6 +279,14 @@ export default function ContactCards() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [view]);
+
+  // Hide the floating pill nav while the chat is in focus mode. Form expand
+  // keeps the nav visible; the form has its own h2 + structured fields, so
+  // the white-on-white merge that motivated this isn't an issue there.
+  useEffect(() => {
+    setHidden(view === "chat");
+    return () => setHidden(false);
+  }, [view, setHidden]);
 
   // Focus management — heading on expand, trigger on collapse.
   useEffect(() => {
@@ -290,13 +336,12 @@ export default function ContactCards() {
             Contact
           </p>
           <h1 className="text-ink font-bold leading-[1.02] tracking-tighter-display text-[clamp(2.25rem,4vw,3.5rem)]">
-            Two ways to start
+            Let&apos;s start
             <br />a conversation.
           </h1>
           <p className="mt-6 text-[15px] leading-[1.6] text-ink-body max-w-[520px]">
-            Send us a project brief and we&apos;ll reply within two business
-            days, or chat live with our assistant for quick answers. Pick
-            whichever feels right.
+            Share a project brief and we&apos;ll get back to you within two
+            business days. A live AI assistant is on the way.
           </p>
         </div>
       </div>
@@ -335,16 +380,17 @@ export default function ContactCards() {
           <CardShell
             open={view === "chat"}
             visible={view !== "form"}
+            disabled
             triggerRef={chatTriggerRef}
             controlsId={chatRegionId}
             headingId={chatHeadingId}
             eyebrow="AI chat"
-            title="Have a quick question?"
-            blurb="Chat with a streaming assistant. Try a starter prompt or write your own."
+            title="Talk to our AI assistant."
+            blurb="A streaming assistant for quick questions about our work, pricing, and process. We're training it now — use the form for the moment."
             Icon={ChatCardIcon}
             onOpen={() => open("chat")}
             onBack={close}
-            ariaLabel="Open AI chat"
+            ariaLabel="AI chat — coming soon"
           >
             <ChatPanel active={view === "chat"} />
           </CardShell>
