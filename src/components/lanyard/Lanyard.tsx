@@ -129,9 +129,10 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
         scale ? ({ "--s": scale } as React.CSSProperties) : undefined
       }
     >
-      {/* Strap-exit shadow — the tab edge casting onto the strap as it
-          emerges from the slot. Sits above the strap and travels with the
-          lanyard so the shadow stays anchored to the strap top. */}
+      {/* Strap-exit darkening — a small gradient at the top of the strap
+          that reads as the strap being tucked under the pill. Sits above
+          the strap and travels with the lanyard so the cue stays anchored
+          to the strap top. */}
       <div
         aria-hidden="true"
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-[1]"
@@ -144,10 +145,10 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
         }}
       />
 
-      {/* Strap. Black ribbon emerging from the nav's threading slot. The
-          strap ends in a clean horizontal cut at the bottom of its viewBox.
-          The pill clip that connects strap-to-badge is drawn inside the
-          badge SVG (so the pill animates with the badge, like a real clip
+      {/* Strap. Black ribbon emerging from beneath the pill nav. The strap
+          ends in a clean horizontal cut at the bottom of its viewBox. The
+          pill clip that connects strap-to-badge is drawn inside the badge
+          SVG (so the pill animates with the badge, like a real clip
           riveted onto the card). */}
       <svg
         viewBox="0 0 60 180"
@@ -219,7 +220,7 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
               top: "calc(var(--s) * -6px)",
               left: 0,
               overflow: "visible",
-              filter: "drop-shadow(-6px 6px 14px rgba(0,0,0,0.10))",
+              filter: "drop-shadow(-4px 4px 10px rgba(0,0,0,0.06))",
               zIndex: 0,
             }}
             aria-hidden="true"
@@ -259,7 +260,7 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
               height: "calc(var(--s) * 380px)",
               overflow: "visible",
               filter:
-                "drop-shadow(8px 14px 24px rgba(17,17,17,0.08)) drop-shadow(16px 36px 60px rgba(17,17,17,0.10))",
+                "drop-shadow(6px 10px 18px rgba(17,17,17,0.05)) drop-shadow(10px 22px 36px rgba(17,17,17,0.06))",
               zIndex: 1,
             }}
           >
@@ -357,12 +358,6 @@ export default function Lanyard({ scale }: LanyardProps = {}) {
                       style={{ fontSize: "0.5em" }}
                     >
                       Founder
-                    </span>
-                    <span
-                      className="text-ink-3 tabular-nums"
-                      style={{ fontSize: "0.5em", letterSpacing: "0.05em" }}
-                    >
-                      #000001
                     </span>
                   </div>
                 </div>

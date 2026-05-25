@@ -48,11 +48,11 @@ export default function ChatMockup() {
       ref={rootRef}
       role="region"
       aria-label="Mobol AI demo chat"
-      className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative bg-surface border border-black/[0.04] flex flex-col"
+      className="aspect-[4/3] w-full rounded-[28px] overflow-hidden relative bg-[#fbfbfa] border border-black/[0.05] flex flex-col"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <ChatWindow />
-      <div className="absolute inset-x-0 top-[8.5%] bottom-0 flex flex-col">
+      <div className="absolute inset-x-0 top-14 bottom-0 flex flex-col">
         <ChatThread
           messages={messages}
           showTypingDots={showTypingDots}

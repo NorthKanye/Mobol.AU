@@ -1,6 +1,10 @@
 "use client";
 
-import { useActionState, useId } from "react";
+// Form is uncontrolled by design. Native undo/redo (Cmd/Ctrl+Z) only works
+// if we never overwrite input values from JS. If real transcription is wired
+// later, use input.setRangeText(...), never input.value = ... or React state.
+
+import { startTransition, useActionState, useEffect, useId, useRef } from "react";
 import { submitContact } from "./actions";
 import SubmitButton from "./SubmitButton";
 import {
@@ -9,8 +13,8 @@ import {
   COMPANY_MAX,
   EMAIL_MAX,
   MESSAGE_MAX,
-  MESSAGE_MIN,
   NAME_MAX,
+  PHONE_MAX,
   PROJECT_TYPES,
   PROJECT_TYPE_LABELS,
   initialContactState,
@@ -20,7 +24,10 @@ import {
 function FieldError({ id, errors }: { id: string; errors?: string[] }) {
   if (!errors?.length) return null;
   return (
-    <p id={id} className="mt-1.5 text-[12px] text-[#a83232]">
+    <p
+      id={id}
+      className="contact-field-error mt-1.5 text-[12px] text-[#a83232]"
+    >
       {errors[0]}
     </p>
   );
@@ -28,18 +35,60 @@ function FieldError({ id, errors }: { id: string; errors?: string[] }) {
 
 const labelClass = "text-[12px] tracking-[0.18em] uppercase text-ink-2";
 const inputBase =
-  "w-full bg-surface border border-border rounded-xl px-4 h-[46px] text-[15px] text-ink placeholder:text-ink-3 transition-colors hover:border-ink/30 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 aria-[invalid=true]:border-[#a83232] aria-[invalid=true]:ring-[#a83232]/15";
+  "w-full bg-surface border border-border rounded-xl px-4 h-[46px] text-[15px] text-ink placeholder:text-ink-3 transition-[box-shadow,border-color,color] duration-150 ease-out hover:border-ink/30 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 aria-[invalid=true]:border-[#a83232] aria-[invalid=true]:ring-[#a83232]/15";
 const textareaBase =
-  "w-full bg-surface border border-border rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink-3 transition-colors hover:border-ink/30 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 aria-[invalid=true]:border-[#a83232] aria-[invalid=true]:ring-[#a83232]/15 resize-y min-h-[140px]";
+  "w-full bg-surface border border-border rounded-xl px-4 py-3 text-[15px] text-ink placeholder:text-ink-3 transition-[box-shadow,border-color,color] duration-150 ease-out hover:border-ink/30 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 aria-[invalid=true]:border-[#a83232] aria-[invalid=true]:ring-[#a83232]/15 resize-y min-h-[140px]";
+
+const FIELD_ORDER = [
+  "name",
+  "email",
+  "company",
+  "phone",
+  "projectType",
+  "budget",
+  "message",
+  "consent",
+] as const satisfies readonly (keyof ContactFieldErrors)[];
 
 export default function ContactForm() {
-  const [state, formAction] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     submitContact,
     initialContactState,
   );
   const formId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
+  const counterRef = useRef<HTMLSpanElement>(null);
   const errors: ContactFieldErrors =
     state.status === "error" ? state.errors ?? {} : {};
+
+  // After a submit with field errors, focus the first invalid field. The
+  // browser's natural focus-scroll honours scroll-margin-top (set in
+  // globals.css) so the focused field doesn't slide under the sticky PillNav.
+  useEffect(() => {
+    if (state.status !== "error" || !state.errors) return;
+    const first = FIELD_ORDER.find((k) => state.errors?.[k]?.length);
+    if (!first) return;
+    const el = formRef.current?.querySelector<HTMLElement>(
+      `[name="${first}"]`,
+    );
+    el?.focus({ preventScroll: false });
+  }, [state]);
+
+  const onMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!((e.metaKey || e.ctrlKey) && e.key === "Enter")) return;
+    const form = e.currentTarget.form;
+    const submitBtn = form?.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    );
+    if (
+      form &&
+      submitBtn &&
+      submitBtn.getAttribute("aria-disabled") !== "true"
+    ) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  };
 
   if (state.status === "success") {
     return (
@@ -52,7 +101,13 @@ export default function ContactForm() {
           aria-hidden="true"
           className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-ink text-surface"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            className="contact-success-check"
+          >
             <path
               d="M4.5 10.5l3.5 3.5 7.5-8"
               stroke="currentColor"
@@ -73,15 +128,33 @@ export default function ContactForm() {
   }
 
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-5">
+    <form
+      ref={formRef}
+      // Manual onSubmit (rather than `action={formAction}`) bypasses
+      // React 19's automatic uncontrolled-field reset, so a user who
+      // submits with a validation error keeps everything they typed.
+      // startTransition keeps useFormStatus().pending wired up.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => formAction(fd));
+      }}
+      noValidate
+      className="contact-form flex flex-col gap-5"
+    >
       {/* Honeypot — visually and semantically hidden but real <input> in
-          the DOM so naive bots fill it. */}
+          the DOM so naive bots fill it. Vendor data-* opt-outs keep major
+          password managers (1Password, LastPass, Bitwarden) from autofilling
+          it and producing false-positive bot blocks. */}
       <input
         type="text"
         name="website"
         tabIndex={-1}
         autoComplete="off"
         aria-hidden="true"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-bwignore="true"
         className="sr-only"
         defaultValue=""
       />
@@ -98,6 +171,7 @@ export default function ContactForm() {
             required
             maxLength={NAME_MAX}
             autoComplete="name"
+            enterKeyHint="next"
             placeholder="Jane Cooper"
             aria-invalid={!!errors.name}
             aria-describedby={
@@ -119,6 +193,8 @@ export default function ContactForm() {
             required
             maxLength={EMAIL_MAX}
             autoComplete="email"
+            inputMode="email"
+            enterKeyHint="next"
             placeholder="jane@company.com"
             aria-invalid={!!errors.email}
             aria-describedby={
@@ -130,24 +206,49 @@ export default function ContactForm() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor={`${formId}-company`} className={labelClass}>
-          Company <span className="lowercase text-ink-3">(optional)</span>
-        </label>
-        <input
-          id={`${formId}-company`}
-          name="company"
-          type="text"
-          maxLength={COMPANY_MAX}
-          autoComplete="organization"
-          placeholder="Acme Co."
-          aria-invalid={!!errors.company}
-          aria-describedby={
-            errors.company ? `${formId}-company-error` : undefined
-          }
-          className={`${inputBase} mt-2`}
-        />
-        <FieldError id={`${formId}-company-error`} errors={errors.company} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label htmlFor={`${formId}-company`} className={labelClass}>
+            Company <span className="lowercase text-ink-3">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-company`}
+            name="company"
+            type="text"
+            maxLength={COMPANY_MAX}
+            autoComplete="organization"
+            enterKeyHint="next"
+            placeholder="Acme Co."
+            aria-invalid={!!errors.company}
+            aria-describedby={
+              errors.company ? `${formId}-company-error` : undefined
+            }
+            className={`${inputBase} mt-2`}
+          />
+          <FieldError id={`${formId}-company-error`} errors={errors.company} />
+        </div>
+
+        <div>
+          <label htmlFor={`${formId}-phone`} className={labelClass}>
+            Phone <span className="lowercase text-ink-3">(optional)</span>
+          </label>
+          <input
+            id={`${formId}-phone`}
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            enterKeyHint="next"
+            maxLength={PHONE_MAX}
+            placeholder="+61 4 1234 5678"
+            aria-invalid={!!errors.phone}
+            aria-describedby={
+              errors.phone ? `${formId}-phone-error` : undefined
+            }
+            className={`${inputBase} mt-2`}
+          />
+          <FieldError id={`${formId}-phone-error`} errors={errors.phone} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -207,14 +308,22 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor={`${formId}-message`} className={labelClass}>
-          Project details
-        </label>
+        <div className="flex items-end justify-between gap-2">
+          <label htmlFor={`${formId}-message`} className={labelClass}>
+            Project details
+          </label>
+          <span
+            ref={counterRef}
+            aria-live="off"
+            className="text-[11px] tabular-nums text-ink-3 pointer-events-none select-none"
+          >
+            0 / {MESSAGE_MAX}
+          </span>
+        </div>
         <textarea
           id={`${formId}-message`}
           name="message"
           required
-          minLength={MESSAGE_MIN}
           maxLength={MESSAGE_MAX}
           rows={5}
           placeholder="Tell us about your goals, audience, and timeline."
@@ -222,28 +331,40 @@ export default function ContactForm() {
           aria-describedby={
             errors.message ? `${formId}-message-error` : undefined
           }
+          onInput={(e) => {
+            if (counterRef.current) {
+              counterRef.current.textContent = `${e.currentTarget.value.length} / ${MESSAGE_MAX}`;
+            }
+          }}
+          onKeyDown={onMessageKeyDown}
           className={`${textareaBase} mt-2`}
         />
         <FieldError id={`${formId}-message-error`} errors={errors.message} />
       </div>
 
-      <label className="flex items-start gap-3 mt-1 cursor-pointer">
-        <input
-          type="checkbox"
-          name="consent"
-          required
-          aria-describedby={
-            errors.consent ? `${formId}-consent-error` : undefined
-          }
-          aria-invalid={!!errors.consent}
-          className="mt-1 h-4 w-4 rounded border-border text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-        />
-        <span className="text-[13px] leading-[1.55] text-ink-body">
-          I agree to be contacted about my enquiry. We'll never share your
-          details.
-        </span>
-      </label>
-      <FieldError id={`${formId}-consent-error`} errors={errors.consent} />
+      <div className="mt-1">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="consent"
+            required
+            aria-describedby={
+              errors.consent ? `${formId}-consent-error` : undefined
+            }
+            aria-invalid={!!errors.consent}
+            className="mt-1 h-4 w-4 rounded border-border text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          />
+          <span className="text-[13px] leading-[1.55] text-ink-body">
+            I agree to be contacted about my enquiry. We&apos;ll never share
+            your details.
+          </span>
+        </label>
+        {/* Indent the error to line up with the consent text, not the
+            checkbox edge. Matches checkbox width (h-4 = 16px) + gap-3 (12px). */}
+        <div className="pl-7">
+          <FieldError id={`${formId}-consent-error`} errors={errors.consent} />
+        </div>
+      </div>
 
       <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
         <p
@@ -255,7 +376,7 @@ export default function ContactForm() {
         >
           {state.status === "error" ? state.message : ""}
         </p>
-        <SubmitButton />
+        <SubmitButton pending={isPending} />
       </div>
     </form>
   );

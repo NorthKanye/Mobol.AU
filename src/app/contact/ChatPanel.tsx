@@ -26,7 +26,6 @@ export default function ChatPanel({ active }: { active: boolean }) {
   });
   const [input, setInput] = useState("");
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
-  const listEndRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLOListElement | null>(null);
 
   const isStreaming = status === "submitted" || status === "streaming";
@@ -70,15 +69,19 @@ export default function ChatPanel({ active }: { active: boolean }) {
     autosize();
   }, [input, autosize]);
 
-  // Scroll to latest message.
+  // Scroll the message list (not the page) to the latest message.
+  // scrollIntoView would scroll every ancestor, including the document —
+  // so on send/receive the whole page would jump. scrollTo on the <ol>
+  // is contained: only the message list moves.
   useEffect(() => {
-    if (!listEndRef.current) return;
+    const list = listRef.current;
+    if (!list) return;
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    listEndRef.current.scrollIntoView({
+    list.scrollTo({
+      top: list.scrollHeight,
       behavior: prefersReduced ? "auto" : "smooth",
-      block: "end",
     });
   }, [messages.length, status]);
 
@@ -161,7 +164,6 @@ export default function ChatPanel({ active }: { active: boolean }) {
                 </li>
               );
             })}
-            <div ref={listEndRef} aria-hidden="true" />
           </ol>
         )}
       </div>

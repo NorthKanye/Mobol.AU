@@ -16,7 +16,7 @@ export default function ChatQuickReplies({
     <div
       role="group"
       aria-label="Suggested questions"
-      className="px-3 pt-2.5 pb-1 flex flex-wrap items-center gap-1.5"
+      className="px-3 sm:px-5 pt-2.5 pb-1 flex flex-wrap items-center gap-1.5"
     >
       {replies.map((text, i) => (
         <button

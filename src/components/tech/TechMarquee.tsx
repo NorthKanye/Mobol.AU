@@ -25,7 +25,7 @@ export default function TechMarquee() {
   return (
     <section
       aria-labelledby="tech-heading"
-      className="relative w-full bg-surface border-t border-border py-14 lg:py-16"
+      className="relative w-full bg-surface py-14 lg:py-16"
     >
       <div className="max-w-[1280px] mx-auto px-8 text-center">
         <h2
@@ -56,7 +56,7 @@ export default function TechMarquee() {
               >
                 <Icon
                   title={name}
-                  className="h-10 lg:h-12 w-auto text-ink-3 transition-colors duration-300 hover:text-ink"
+                  className="h-10 lg:h-12 w-auto text-ink"
                 />
               </li>
             )),

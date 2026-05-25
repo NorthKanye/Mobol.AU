@@ -16,29 +16,29 @@ const CTA_RESPONSES: Array<{
   cta: Extract<ChatWidget, { type: "cta" }>;
 }> = [
   {
-    text: "Easy. Drop us a line — we usually answer same day.",
+    text: "Good first move: bring one process that keeps slipping. We map the questions, the systems it can safely touch, and the point where a person should step in.",
     cta: {
       type: "cta",
       href: "#contact",
-      label: "Start a project with mobol.",
-      eyebrow: "let's get specific",
+      label: "Map where AI earns its place.",
+      eyebrow: "plain-English scoping",
     },
   },
   {
-    text: "Yep, we can do that. Want to scope it?",
+    text: "For most teams, the first useful version is small: trusted answers, one or two backend actions, and a clear handoff when the work needs judgement.",
     cta: {
       type: "cta",
       href: "#contact",
-      label: "Tell us what you're building.",
-      eyebrow: "scope a build",
+      label: "Show us the workflow.",
+      eyebrow: "systems before theatre",
     },
   },
   {
-    text: "Sounds like a fit. Loop us in.",
+    text: "We would start with the boring, valuable bits: repeated questions, missed calls, manual follow-ups, and reporting nobody has time to keep tidy.",
     cta: {
       type: "cta",
       href: "#contact",
-      label: "Book a 20-minute intro.",
+      label: "Plan the first AI release.",
       eyebrow: "talk to a human",
     },
   },
@@ -204,6 +204,7 @@ function buildAllScriptMessages(script: ChatScript): RenderedMessage[] {
         source: "script",
         status: "complete",
         stepIndex: i,
+        widgetEnterDelayMs: step.widgetEnterDelayMs,
         thinking: step.thinkingSteps
           ? {
               steps: step.thinkingSteps,
@@ -312,6 +313,7 @@ export function useChatScript(script: ChatScript) {
                 source: "script",
                 status: "revealing",
                 stepIndex,
+                widgetEnterDelayMs: step.widgetEnterDelayMs,
                 thinking: {
                   steps: step.thinkingSteps!,
                   activeIndex: 0,
@@ -392,6 +394,7 @@ export function useChatScript(script: ChatScript) {
                     source: "script",
                     status: useTypewriter ? "revealing" : "complete",
                     stepIndex,
+                    widgetEnterDelayMs: step.widgetEnterDelayMs,
                   },
                 });
                 if (useTypewriter) {
